@@ -7,6 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- React & Babel -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -15,14 +18,33 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     
     <script>
-        tailwind.config = { 
-            theme: { 
-                extend: { 
-                    colors: { primary: '#1B3A6B', accent: '#2E6DB4' } 
-                } 
-            } 
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1B3A6B',
+                        'primary-dark': '#0E2444',
+                        'primary-light': '#2A4E85',
+                        accent: '#2E6DB4',
+                        'accent-light': '#4A8AD1'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        display: ['Manrope', 'ui-sans-serif', 'system-ui', 'sans-serif']
+                    },
+                    boxShadow: {
+                        soft: '0 2px 10px -2px rgba(15,36,68,0.08), 0 1px 3px -1px rgba(15,36,68,0.06)',
+                        card: '0 8px 24px -8px rgba(15,36,68,0.14)'
+                    }
+                }
+            }
         }
     </script>
+    <style>
+        h1,h2,h3,h4,h5,h6,.font-display { font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.01em; }
+        ::selection { background: #2E6DB4; color: #fff; }
+        body { -webkit-font-smoothing: antialiased; }
+    </style>
 </head>
 <body class="bg-gray-50 text-gray-700 font-sans">
 <div id="root"></div>
@@ -45,7 +67,7 @@
                 <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
                     <button onClick={onClose} className="px-4 py-2 text-sm font-bold text-gray-600 hover:text-gray-900">Cancel</button>
                     {onSubmit && (
-                        <button onClick={onSubmit} disabled={loading} className="px-6 py-2 bg-primary text-white text-sm font-bold rounded-md shadow hover:bg-accent transition disabled:opacity-50">
+                        <button onClick={onSubmit} disabled={loading} className="px-6 py-2 bg-primary text-white text-sm font-bold rounded-lg shadow-soft hover:shadow-card hover:bg-accent-light transition-all disabled:opacity-50 disabled:hover:translate-y-0 hover:-translate-y-0.5">
                             {loading ? <i className="fas fa-spinner fa-spin"></i> : submitText}
                         </button>
                     )}
@@ -100,51 +122,46 @@
         // --- DASHBOARD VIEW ---
         const DashboardView = () => {
             const [stats, setStats] = useState({ reports: 0, pending: 0, dept_incidents: 0, active_dept_cases: 0, assigned: 0, pending_hearings: 0 });
-            
+            const [loading, setLoading] = useState(true);
+
             useEffect(() => {
-                apiCall('get_user_dashboard').then(res => setStats(res.data.data)).catch(console.error);
+                setLoading(true);
+                apiCall('get_user_dashboard').then(res => setStats(res.data.data)).catch(console.error).finally(() => setLoading(false));
             }, []);
+
+            const StatCard = ({ value, label, color }) => (
+                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-soft hover:shadow-card transition-shadow">
+                    <div className="text-gray-500 text-xs font-bold uppercase mb-2 tracking-wide">{label}</div>
+                    {loading ? (
+                        <div className="h-8 w-14 bg-gray-100 rounded animate-pulse"></div>
+                    ) : (
+                        <div className={`text-3xl font-extrabold ${color}`}>{value || 0}</div>
+                    )}
+                </div>
+            );
 
             return (
                 <div className="space-y-6">
-                    <h2 className="text-2xl font-bold text-gray-900">Welcome, {user.full_name}</h2>
+                    <h2 className="text-2xl font-display font-bold text-gray-900 tracking-tight">Welcome, {user.full_name}</h2>
                     <p className="text-gray-600">This is your personalized {user.role.replace('_', ' ')} portal.</p>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
                         {user.role === 'invigilator' && (
                             <>
-                                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                                    <div className="text-gray-500 text-xs font-bold uppercase mb-2">My Reports</div>
-                                    <div className="text-3xl font-extrabold text-primary">{stats.reports || 0}</div>
-                                </div>
-                                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                                    <div className="text-gray-500 text-xs font-bold uppercase mb-2">Pending Review</div>
-                                    <div className="text-3xl font-extrabold text-yellow-600">{stats.pending || 0}</div>
-                                </div>
+                                <StatCard value={stats.reports} label="My Reports" color="text-primary" />
+                                <StatCard value={stats.pending} label="Pending Review" color="text-yellow-600" />
                             </>
                         )}
                         {user.role === 'hod' && (
                             <>
-                                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                                    <div className="text-gray-500 text-xs font-bold uppercase mb-2">Dept Incidents</div>
-                                    <div className="text-3xl font-extrabold text-primary">{stats.dept_incidents || 0}</div>
-                                </div>
-                                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                                    <div className="text-gray-500 text-xs font-bold uppercase mb-2">Active Dept Cases</div>
-                                    <div className="text-3xl font-extrabold text-blue-600">{stats.active_dept_cases || 0}</div>
-                                </div>
+                                <StatCard value={stats.dept_incidents} label="Dept Incidents" color="text-primary" />
+                                <StatCard value={stats.active_dept_cases} label="Active Dept Cases" color="text-blue-600" />
                             </>
                         )}
                         {user.role === 'committee' && (
                             <>
-                                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                                    <div className="text-gray-500 text-xs font-bold uppercase mb-2">Assigned Cases</div>
-                                    <div className="text-3xl font-extrabold text-primary">{stats.assigned || 0}</div>
-                                </div>
-                                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                                    <div className="text-gray-500 text-xs font-bold uppercase mb-2">Pending Hearings</div>
-                                    <div className="text-3xl font-extrabold text-orange-600">{stats.pending_hearings || 0}</div>
-                                </div>
+                                <StatCard value={stats.assigned} label="Assigned Cases" color="text-primary" />
+                                <StatCard value={stats.pending_hearings} label="Pending Hearings" color="text-orange-600" />
                             </>
                         )}
                     </div>
@@ -257,7 +274,7 @@
                         </div>
 
                         <div className="pt-4 border-t border-gray-100 flex justify-end">
-                            <button type="submit" disabled={loading} className="bg-primary hover:bg-accent text-white px-8 py-3 rounded-md font-bold shadow-lg transition flex items-center gap-2">
+                            <button type="submit" disabled={loading} className="bg-primary hover:bg-accent-light text-white px-8 py-3 rounded-lg font-bold shadow-card hover:shadow-xl transition-all hover:-translate-y-0.5 flex items-center gap-2">
                                 {loading ? <i className="fas fa-spinner fa-spin"></i> : <><i className="fas fa-paper-plane"></i> Submit Formal Report</>}
                             </button>
                         </div>
@@ -332,7 +349,7 @@
 
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         <table className="w-full text-left">
-                            <thead className="bg-gray-50 text-xs uppercase text-gray-500 border-b border-gray-200">
+                            <thead className="bg-slate-50/80 text-[11px] uppercase tracking-wider text-gray-500 border-b border-gray-200 sticky top-0">
                                 <tr>
                                     <th className="p-4 font-bold">Reference / ID</th>
                                     <th className="p-4 font-bold">Student</th>
@@ -477,16 +494,26 @@
         };
 
         // --- Master Layout ---
-        if (!user) return null;
+        if (!user) {
+            return (
+                <div className="flex h-screen items-center justify-center bg-gray-50">
+                    <div className="flex flex-col items-center gap-3 text-primary">
+                        <i className="fas fa-circle-notch fa-spin text-3xl"></i>
+                        <div className="text-sm font-bold text-gray-500 uppercase tracking-wide">Loading Portal…</div>
+                    </div>
+                </div>
+            );
+        }
 
         return (
             <div className="flex h-screen bg-gray-50 overflow-hidden">
-                <aside className="w-64 bg-primary text-white flex flex-col h-full shadow-lg z-20 relative">
-                    <div className="h-16 flex items-center px-6 font-bold text-xl tracking-tight border-b border-white/10 bg-black/10">
-                        FUD<span className="text-blue-300 ml-1">OIRMF</span>
+                <aside className="w-64 bg-gradient-to-b from-primary to-primary-dark text-white flex flex-col h-full shadow-card z-20 relative">
+                    <div className="h-16 flex items-center gap-3 px-6 font-display font-extrabold text-xl tracking-tight border-b border-white/10 bg-black/10">
+                        <div className="w-9 h-9 rounded-lg bg-accent/90 flex items-center justify-center shadow-soft shrink-0"><i className="fas fa-shield-halved text-sm"></i></div>
+                        <span>FUD<span className="text-accent-light ml-1">OIRMF</span></span>
                     </div>
                     <div className="p-4 flex items-center gap-3 border-b border-white/10">
-                        <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center font-bold text-lg"><i className="fas fa-user"></i></div>
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-accent-light ring-2 ring-white/15 flex items-center justify-center font-bold text-lg shadow-soft shrink-0"><i className="fas fa-user"></i></div>
                         <div>
                             <div className="text-sm font-bold truncate w-40">{user?.full_name}</div>
                             <div className="text-[10px] uppercase tracking-wider text-blue-200">{user?.role.replace('_', ' ')} Portal</div>
@@ -494,33 +521,33 @@
                     </div>
                     <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                         <div className="text-xs font-bold text-blue-300/50 uppercase tracking-wider mb-2 mt-2 px-2">Navigation</div>
-                        <button onClick={()=>setView('dashboard')} className={`w-full text-left px-4 py-2.5 rounded-md flex items-center gap-3 transition text-sm ${view==='dashboard'?'bg-accent text-white font-bold':'text-blue-100 hover:bg-white/10'}`}><i className="fas fa-home w-5"></i> Dashboard</button>
+                        <button onClick={()=>setView('dashboard')} className={`w-full text-left px-3.5 py-2.5 rounded-lg flex items-center gap-3 transition-all text-sm border-l-[3px] ${view==='dashboard'?'bg-white/10 text-white font-bold border-accent-light shadow-inner':'border-transparent text-blue-100/80 hover:bg-white/5 hover:text-white'}`}><i className="fas fa-home w-5"></i> Dashboard</button>
                         
                         {user.role === 'invigilator' && (
                             <>
-                                <button onClick={()=>setView('new_report')} className={`w-full text-left px-4 py-2.5 rounded-md flex items-center gap-3 transition text-sm ${view==='new_report'?'bg-accent text-white font-bold':'text-blue-100 hover:bg-white/10'}`}><i className="fas fa-plus-circle w-5"></i> Report Incident</button>
-                                <button onClick={()=>setView('incidents')} className={`w-full text-left px-4 py-2.5 rounded-md flex items-center gap-3 transition text-sm ${view==='incidents'?'bg-accent text-white font-bold':'text-blue-100 hover:bg-white/10'}`}><i className="fas fa-list-alt w-5"></i> My Reports</button>
+                                <button onClick={()=>setView('new_report')} className={`w-full text-left px-3.5 py-2.5 rounded-lg flex items-center gap-3 transition-all text-sm border-l-[3px] ${view==='new_report'?'bg-white/10 text-white font-bold border-accent-light shadow-inner':'border-transparent text-blue-100/80 hover:bg-white/5 hover:text-white'}`}><i className="fas fa-plus-circle w-5"></i> Report Incident</button>
+                                <button onClick={()=>setView('incidents')} className={`w-full text-left px-3.5 py-2.5 rounded-lg flex items-center gap-3 transition-all text-sm border-l-[3px] ${view==='incidents'?'bg-white/10 text-white font-bold border-accent-light shadow-inner':'border-transparent text-blue-100/80 hover:bg-white/5 hover:text-white'}`}><i className="fas fa-list-alt w-5"></i> My Reports</button>
                             </>
                         )}
                         
                         {user.role === 'hod' && (
                             <>
-                                <button onClick={()=>setView('incidents')} className={`w-full text-left px-4 py-2.5 rounded-md flex items-center gap-3 transition text-sm ${view==='incidents'?'bg-accent text-white font-bold':'text-blue-100 hover:bg-white/10'}`}><i className="fas fa-file-alt w-5"></i> Dept Incidents</button>
-                                <button onClick={()=>setView('cases')} className={`w-full text-left px-4 py-2.5 rounded-md flex items-center gap-3 transition text-sm ${view==='cases'?'bg-accent text-white font-bold':'text-blue-100 hover:bg-white/10'}`}><i className="fas fa-folder-open w-5"></i> Dept Cases</button>
+                                <button onClick={()=>setView('incidents')} className={`w-full text-left px-3.5 py-2.5 rounded-lg flex items-center gap-3 transition-all text-sm border-l-[3px] ${view==='incidents'?'bg-white/10 text-white font-bold border-accent-light shadow-inner':'border-transparent text-blue-100/80 hover:bg-white/5 hover:text-white'}`}><i className="fas fa-file-alt w-5"></i> Dept Incidents</button>
+                                <button onClick={()=>setView('cases')} className={`w-full text-left px-3.5 py-2.5 rounded-lg flex items-center gap-3 transition-all text-sm border-l-[3px] ${view==='cases'?'bg-white/10 text-white font-bold border-accent-light shadow-inner':'border-transparent text-blue-100/80 hover:bg-white/5 hover:text-white'}`}><i className="fas fa-folder-open w-5"></i> Dept Cases</button>
                             </>
                         )}
 
                         {user.role === 'committee' && (
                             <>
-                                <button onClick={()=>setView('cases')} className={`w-full text-left px-4 py-2.5 rounded-md flex items-center gap-3 transition text-sm ${view==='cases'?'bg-accent text-white font-bold':'text-blue-100 hover:bg-white/10'}`}><i className="fas fa-gavel w-5"></i> Assigned Cases</button>
+                                <button onClick={()=>setView('cases')} className={`w-full text-left px-3.5 py-2.5 rounded-lg flex items-center gap-3 transition-all text-sm border-l-[3px] ${view==='cases'?'bg-white/10 text-white font-bold border-accent-light shadow-inner':'border-transparent text-blue-100/80 hover:bg-white/5 hover:text-white'}`}><i className="fas fa-gavel w-5"></i> Assigned Cases</button>
                             </>
                         )}
                     </nav>
                 </aside>
 
                 <div className="flex-1 flex flex-col min-w-0">
-                    <header className="h-16 bg-white shadow-sm flex items-center justify-between px-8 z-10 border-b border-gray-200">
-                        <h1 className="text-xl font-extrabold text-gray-800 capitalize">
+                    <header className="h-16 bg-white/95 backdrop-blur-sm shadow-soft flex items-center justify-between px-8 z-10 border-b border-gray-100">
+                        <h1 className="text-xl font-display font-extrabold text-gray-800 capitalize tracking-tight">
                             {view.replace('_', ' ')}
                         </h1>
                         <div className="flex items-center gap-6">
