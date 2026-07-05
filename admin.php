@@ -7,6 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- React & Babel -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -17,18 +20,37 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     
     <script>
-        tailwind.config = { 
-            theme: { 
-                extend: { 
-                    colors: { primary: '#1B3A6B', accent: '#2E6DB4' } 
-                } 
-            } 
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1B3A6B',
+                        'primary-dark': '#0E2444',
+                        'primary-light': '#2A4E85',
+                        accent: '#2E6DB4',
+                        'accent-light': '#4A8AD1'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        display: ['Manrope', 'ui-sans-serif', 'system-ui', 'sans-serif']
+                    },
+                    boxShadow: {
+                        soft: '0 2px 10px -2px rgba(15,36,68,0.08), 0 1px 3px -1px rgba(15,36,68,0.06)',
+                        card: '0 8px 24px -8px rgba(15,36,68,0.14)'
+                    }
+                }
+            }
         }
     </script>
     <style>
         /* Custom Scrollbar for Timeline */
         .timeline-scroll::-webkit-scrollbar { width: 6px; }
         .timeline-scroll::-webkit-scrollbar-thumb { background-color: #CBD5E1; border-radius: 4px; }
+    </style>
+    <style>
+        h1,h2,h3,h4,h5,h6,.font-display { font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.01em; }
+        ::selection { background: #2E6DB4; color: #fff; }
+        body { -webkit-font-smoothing: antialiased; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-700 font-sans">
@@ -52,7 +74,7 @@
                 <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
                     <button onClick={onClose} className="px-4 py-2 text-sm font-bold text-gray-600 hover:text-gray-900">Cancel</button>
                     {onSubmit && (
-                        <button onClick={onSubmit} disabled={loading} className="px-6 py-2 bg-primary text-white text-sm font-bold rounded-md shadow hover:bg-accent transition disabled:opacity-50">
+                        <button onClick={onSubmit} disabled={loading} className="px-6 py-2 bg-primary text-white text-sm font-bold rounded-lg shadow-soft hover:shadow-card hover:bg-accent-light transition-all disabled:opacity-50 disabled:hover:translate-y-0 hover:-translate-y-0.5">
                             {loading ? <i className="fas fa-spinner fa-spin"></i> : submitText}
                         </button>
                     )}
@@ -106,30 +128,34 @@
 
         const DashboardView = () => {
             const [stats, setStats] = useState({ users: 0, incidents: 0, active_cases: 0, resolved_cases: 0, recent: [] });
-            
+            const [loading, setLoading] = useState(true);
+
             useEffect(() => {
-                apiCall('get_admin_dashboard').then(res => setStats(res.data.data)).catch(() => {});
+                setLoading(true);
+                apiCall('get_admin_dashboard').then(res => setStats(res.data.data)).catch(() => {}).finally(() => setLoading(false));
             }, []);
+
+            const StatCard = ({ icon, iconBg, iconColor, value, label }) => (
+                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-full ${iconBg} ${iconColor} flex items-center justify-center text-xl shrink-0`}><i className={`fas ${icon}`}></i></div>
+                    {loading ? (
+                        <div className="flex-1 min-w-0">
+                            <div className="h-7 w-16 bg-gray-100 rounded animate-pulse mb-2"></div>
+                            <div className="h-3 w-24 bg-gray-100 rounded animate-pulse"></div>
+                        </div>
+                    ) : (
+                        <div><div className="text-3xl font-extrabold text-gray-900">{value || 0}</div><div className="text-xs text-gray-500 uppercase font-bold tracking-wide">{label}</div></div>
+                    )}
+                </div>
+            );
 
             return (
                 <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl"><i className="fas fa-users"></i></div>
-                            <div><div className="text-3xl font-extrabold text-gray-900">{stats.users || 0}</div><div className="text-xs text-gray-500 uppercase font-bold tracking-wide">Total Users</div></div>
-                        </div>
-                        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-red-50 text-red-600 flex items-center justify-center text-xl"><i className="fas fa-folder-open"></i></div>
-                            <div><div className="text-3xl font-extrabold text-gray-900">{stats.incidents || 0}</div><div className="text-xs text-gray-500 uppercase font-bold tracking-wide">Total Incidents</div></div>
-                        </div>
-                        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-yellow-50 text-yellow-600 flex items-center justify-center text-xl"><i className="fas fa-gavel"></i></div>
-                            <div><div className="text-3xl font-extrabold text-gray-900">{stats.active_cases || 0}</div><div className="text-xs text-gray-500 uppercase font-bold tracking-wide">Active Cases</div></div>
-                        </div>
-                        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-green-50 text-green-600 flex items-center justify-center text-xl"><i className="fas fa-check-circle"></i></div>
-                            <div><div className="text-3xl font-extrabold text-gray-900">{stats.resolved_cases || 0}</div><div className="text-xs text-gray-500 uppercase font-bold tracking-wide">Resolved Cases</div></div>
-                        </div>
+                        <StatCard icon="fa-users" iconBg="bg-blue-50" iconColor="text-blue-600" value={stats.users} label="Total Users" />
+                        <StatCard icon="fa-folder-open" iconBg="bg-red-50" iconColor="text-red-600" value={stats.incidents} label="Total Incidents" />
+                        <StatCard icon="fa-gavel" iconBg="bg-yellow-50" iconColor="text-yellow-600" value={stats.active_cases} label="Active Cases" />
+                        <StatCard icon="fa-check-circle" iconBg="bg-green-50" iconColor="text-green-600" value={stats.resolved_cases} label="Resolved Cases" />
                     </div>
                 </div>
             );
@@ -140,9 +166,10 @@
             const [showModal, setShowModal] = useState(false);
             const [editingUser, setEditingUser] = useState(null);
             const [msg, setMsg] = useState({ text: '', type: '' });
+            const [loading, setLoading] = useState(true);
             const [form, setForm] = useState({ id:'', staff_id:'', full_name:'', email:'', password:'', role:'invigilator', faculty_id:'', department_id:'' });
             
-            const fetchUsers = () => apiCall('get_users').then(res => setUsers(res.data.data));
+            const fetchUsers = () => { setLoading(true); return apiCall('get_users').then(res => setUsers(res.data.data)).finally(() => setLoading(false)); };
             useEffect(() => { fetchUsers(); }, []);
 
             const handleEdit = (user) => {
@@ -189,14 +216,14 @@
                             <i className="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                             <input className="pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-md focus:border-accent focus:ring-1 focus:ring-accent outline-none text-sm w-64" placeholder="Search staff..."/>
                         </div>
-                        <button onClick={handleCreate} className="bg-primary text-white px-4 py-2 rounded-md text-sm font-bold shadow hover:bg-accent transition flex items-center gap-2">
+                        <button onClick={handleCreate} className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold shadow-soft hover:shadow-card hover:bg-accent-light transition-all hover:-translate-y-0.5 flex items-center gap-2">
                             <i className="fas fa-plus"></i> Add New User
                         </button>
                     </div>
 
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         <table className="w-full text-left">
-                            <thead className="bg-gray-50 text-xs uppercase text-gray-500 border-b border-gray-200">
+                            <thead className="bg-slate-50/80 text-[11px] uppercase tracking-wider text-gray-500 border-b border-gray-200 sticky top-0">
                                 <tr>
                                     <th className="p-4 font-bold">Staff ID & Name</th>
                                     <th className="p-4 font-bold">Contact</th>
@@ -206,7 +233,19 @@
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {users.map(u => <tr key={u.id} className="hover:bg-gray-50 transition">
+                                {loading ? (
+                                    Array.from({ length: 5 }).map((_, i) => (
+                                        <tr key={`sk-${i}`}>
+                                            <td className="p-4"><div className="h-4 w-32 bg-gray-100 rounded animate-pulse mb-2"></div><div className="h-3 w-20 bg-gray-100 rounded animate-pulse"></div></td>
+                                            <td className="p-4"><div className="h-4 w-40 bg-gray-100 rounded animate-pulse"></div></td>
+                                            <td className="p-4"><div className="h-4 w-24 bg-gray-100 rounded animate-pulse mb-2"></div><div className="h-3 w-16 bg-gray-100 rounded animate-pulse"></div></td>
+                                            <td className="p-4 text-center"><div className="h-5 w-16 bg-gray-100 rounded animate-pulse mx-auto"></div></td>
+                                            <td className="p-4 text-right"><div className="h-5 w-20 bg-gray-100 rounded animate-pulse ml-auto"></div></td>
+                                        </tr>
+                                    ))
+                                ) : users.length === 0 ? (
+                                    <tr><td colSpan="5" className="p-8 text-center text-gray-400">No users found.</td></tr>
+                                ) : users.map(u => <tr key={u.id} className="hover:bg-gray-50 transition">
                                     <td className="p-4">
                                         <div className="font-bold text-gray-900">{u.full_name}</div>
                                         <div className="text-xs text-gray-500 font-mono mt-0.5">{u.staff_id}</div>
@@ -289,7 +328,7 @@
                     </div>
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         <table className="w-full text-left">
-                            <thead className="bg-gray-50 text-xs uppercase text-gray-500 border-b border-gray-200">
+                            <thead className="bg-slate-50/80 text-[11px] uppercase tracking-wider text-gray-500 border-b border-gray-200 sticky top-0">
                                 <tr><th className="p-4 font-bold">Ref & Date</th><th className="p-4 font-bold">Student Info</th><th className="p-4 font-bold">Offence Details</th><th className="p-4 font-bold text-center">Status</th></tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -350,7 +389,7 @@
 
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         <table className="w-full text-left">
-                            <thead className="bg-gray-50 text-xs uppercase text-gray-500 border-b border-gray-200">
+                            <thead className="bg-slate-50/80 text-[11px] uppercase tracking-wider text-gray-500 border-b border-gray-200 sticky top-0">
                                 <tr><th className="p-4">Case / Incident</th><th className="p-4">Student</th><th className="p-4">Current Stage</th><th className="p-4">Committee</th><th className="p-4 text-right">Actions</th></tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -368,7 +407,7 @@
                                         </td>
                                         <td className="p-4 text-right">
                                             {/* 360 View Button for Admin */}
-                                            <button onClick={() => open360View(c.id)} className="bg-primary hover:bg-accent text-white px-4 py-1.5 rounded-md text-xs font-bold transition shadow" title="Full 360° Case View">
+                                            <button onClick={() => open360View(c.id)} className="bg-primary hover:bg-accent-light text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-all shadow-soft hover:shadow-card hover:-translate-y-0.5" title="Full 360° Case View">
                                                 {loading360 ? <i className="fas fa-spinner fa-spin"></i> : <><i className="fas fa-eye mr-1"></i> View Case Dossier</>}
                                             </button>
                                         </td>
@@ -492,7 +531,7 @@
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden p-6">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="font-bold text-gray-800 capitalize">Manage {activeTab}</h3>
-                            <button className="bg-primary text-white px-4 py-2 rounded-md text-sm font-bold shadow hover:bg-accent transition"><i className="fas fa-plus mr-2"></i> Add New</button>
+                            <button className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold shadow-soft hover:shadow-card hover:bg-accent-light transition-all hover:-translate-y-0.5"><i className="fas fa-plus mr-2"></i> Add New</button>
                         </div>
 
                         {activeTab === 'faculties' && (
@@ -594,20 +633,32 @@
                             <span className="text-sm text-gray-600">Enable strict workflow</span>
                         </div>
                     </div>
-                    <button className="bg-primary text-white px-6 py-2 rounded-md text-sm font-bold shadow hover:bg-accent transition">Save Configuration</button>
+                    <button className="bg-primary text-white px-6 py-2 rounded-lg text-sm font-bold shadow-soft hover:shadow-card hover:bg-accent-light transition-all hover:-translate-y-0.5">Save Configuration</button>
                 </form>
             </div>
         );
 
         // --- Master Layout ---
+        if (!user) {
+            return (
+                <div className="flex h-screen items-center justify-center bg-gray-50">
+                    <div className="flex flex-col items-center gap-3 text-primary">
+                        <i className="fas fa-circle-notch fa-spin text-3xl"></i>
+                        <div className="text-sm font-bold text-gray-500 uppercase tracking-wide">Loading Admin Console…</div>
+                    </div>
+                </div>
+            );
+        }
+
         return (
             <div className="flex h-screen bg-gray-50 overflow-hidden">
-                <aside className="w-64 bg-primary text-white flex flex-col h-full shadow-lg z-20 relative">
-                    <div className="h-16 flex items-center px-6 font-bold text-xl tracking-tight border-b border-white/10 bg-black/10">
-                        FUD<span className="text-blue-300 ml-1">OIRMF</span>
+                <aside className="w-64 bg-gradient-to-b from-primary to-primary-dark text-white flex flex-col h-full shadow-card z-20 relative">
+                    <div className="h-16 flex items-center gap-3 px-6 font-display font-extrabold text-xl tracking-tight border-b border-white/10 bg-black/10">
+                        <div className="w-9 h-9 rounded-lg bg-accent/90 flex items-center justify-center shadow-soft shrink-0"><i className="fas fa-shield-halved text-sm"></i></div>
+                        <span>FUD<span className="text-accent-light ml-1">OIRMF</span></span>
                     </div>
                     <div className="p-4 flex items-center gap-3 border-b border-white/10">
-                        <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center font-bold text-lg"><i className="fas fa-user-shield"></i></div>
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-accent-light ring-2 ring-white/15 flex items-center justify-center font-bold text-lg shadow-soft shrink-0"><i className="fas fa-user-shield"></i></div>
                         <div>
                             <div className="text-sm font-bold truncate w-40">{user?.full_name}</div>
                             <div className="text-[10px] uppercase tracking-wider text-blue-200">Administrator</div>
@@ -615,23 +666,23 @@
                     </div>
                     <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                         <div className="text-xs font-bold text-blue-300/50 uppercase tracking-wider mb-2 mt-2 px-2">Core</div>
-                        <button onClick={()=>setView('dashboard')} className={`w-full text-left px-4 py-2.5 rounded-md flex items-center gap-3 transition text-sm ${view==='dashboard'?'bg-accent text-white font-bold':'text-blue-100 hover:bg-white/10'}`}><i className="fas fa-chart-pie w-5"></i> Dashboard</button>
-                        <button onClick={()=>setView('users')} className={`w-full text-left px-4 py-2.5 rounded-md flex items-center gap-3 transition text-sm ${view==='users'?'bg-accent text-white font-bold':'text-blue-100 hover:bg-white/10'}`}><i className="fas fa-users-cog w-5"></i> Manage Users</button>
+                        <button onClick={()=>setView('dashboard')} className={`w-full text-left px-3.5 py-2.5 rounded-lg flex items-center gap-3 transition-all text-sm border-l-[3px] ${view==='dashboard'?'bg-white/10 text-white font-bold border-accent-light shadow-inner':'border-transparent text-blue-100/80 hover:bg-white/5 hover:text-white'}`}><i className="fas fa-chart-pie w-5"></i> Dashboard</button>
+                        <button onClick={()=>setView('users')} className={`w-full text-left px-3.5 py-2.5 rounded-lg flex items-center gap-3 transition-all text-sm border-l-[3px] ${view==='users'?'bg-white/10 text-white font-bold border-accent-light shadow-inner':'border-transparent text-blue-100/80 hover:bg-white/5 hover:text-white'}`}><i className="fas fa-users-cog w-5"></i> Manage Users</button>
                         
                         <div className="text-xs font-bold text-blue-300/50 uppercase tracking-wider mb-2 mt-6 px-2">Workflow Management</div>
-                        <button onClick={()=>setView('incidents')} className={`w-full text-left px-4 py-2.5 rounded-md flex items-center gap-3 transition text-sm ${view==='incidents'?'bg-accent text-white font-bold':'text-blue-100 hover:bg-white/10'}`}><i className="fas fa-folder-open w-5"></i> All Incidents</button>
-                        <button onClick={()=>setView('cases')} className={`w-full text-left px-4 py-2.5 rounded-md flex items-center gap-3 transition text-sm ${view==='cases'?'bg-accent text-white font-bold':'text-blue-100 hover:bg-white/10'}`}><i className="fas fa-gavel w-5"></i> All Cases</button>
+                        <button onClick={()=>setView('incidents')} className={`w-full text-left px-3.5 py-2.5 rounded-lg flex items-center gap-3 transition-all text-sm border-l-[3px] ${view==='incidents'?'bg-white/10 text-white font-bold border-accent-light shadow-inner':'border-transparent text-blue-100/80 hover:bg-white/5 hover:text-white'}`}><i className="fas fa-folder-open w-5"></i> All Incidents</button>
+                        <button onClick={()=>setView('cases')} className={`w-full text-left px-3.5 py-2.5 rounded-lg flex items-center gap-3 transition-all text-sm border-l-[3px] ${view==='cases'?'bg-white/10 text-white font-bold border-accent-light shadow-inner':'border-transparent text-blue-100/80 hover:bg-white/5 hover:text-white'}`}><i className="fas fa-gavel w-5"></i> All Cases</button>
 
                         <div className="text-xs font-bold text-blue-300/50 uppercase tracking-wider mb-2 mt-6 px-2">Configuration</div>
-                        <button onClick={()=>setView('structure')} className={`w-full text-left px-4 py-2.5 rounded-md flex items-center gap-3 transition text-sm ${view==='structure'?'bg-accent text-white font-bold':'text-blue-100 hover:bg-white/10'}`}><i className="fas fa-sitemap w-5"></i> Academic Structure</button>
-                        <button onClick={()=>setView('analytics')} className={`w-full text-left px-4 py-2.5 rounded-md flex items-center gap-3 transition text-sm ${view==='analytics'?'bg-accent text-white font-bold':'text-blue-100 hover:bg-white/10'}`}><i className="fas fa-chart-area w-5"></i> Reports & Analytics</button>
-                        <button onClick={()=>setView('settings')} className={`w-full text-left px-4 py-2.5 rounded-md flex items-center gap-3 transition text-sm ${view==='settings'?'bg-accent text-white font-bold':'text-blue-100 hover:bg-white/10'}`}><i className="fas fa-cogs w-5"></i> System Settings</button>
+                        <button onClick={()=>setView('structure')} className={`w-full text-left px-3.5 py-2.5 rounded-lg flex items-center gap-3 transition-all text-sm border-l-[3px] ${view==='structure'?'bg-white/10 text-white font-bold border-accent-light shadow-inner':'border-transparent text-blue-100/80 hover:bg-white/5 hover:text-white'}`}><i className="fas fa-sitemap w-5"></i> Academic Structure</button>
+                        <button onClick={()=>setView('analytics')} className={`w-full text-left px-3.5 py-2.5 rounded-lg flex items-center gap-3 transition-all text-sm border-l-[3px] ${view==='analytics'?'bg-white/10 text-white font-bold border-accent-light shadow-inner':'border-transparent text-blue-100/80 hover:bg-white/5 hover:text-white'}`}><i className="fas fa-chart-area w-5"></i> Reports & Analytics</button>
+                        <button onClick={()=>setView('settings')} className={`w-full text-left px-3.5 py-2.5 rounded-lg flex items-center gap-3 transition-all text-sm border-l-[3px] ${view==='settings'?'bg-white/10 text-white font-bold border-accent-light shadow-inner':'border-transparent text-blue-100/80 hover:bg-white/5 hover:text-white'}`}><i className="fas fa-cogs w-5"></i> System Settings</button>
                     </nav>
                 </aside>
 
                 <div className="flex-1 flex flex-col min-w-0">
-                    <header className="h-16 bg-white shadow-sm flex items-center justify-between px-8 z-10 border-b border-gray-200">
-                        <h1 className="text-xl font-extrabold text-gray-800 capitalize">{view.replace('_', ' ')}</h1>
+                    <header className="h-16 bg-white/95 backdrop-blur-sm shadow-soft flex items-center justify-between px-8 z-10 border-b border-gray-100">
+                        <h1 className="text-xl font-display font-extrabold text-gray-800 capitalize tracking-tight">{view.replace('_', ' ')}</h1>
                         <div className="flex items-center gap-6">
                             <button className="text-gray-400 hover:text-primary relative" title="Notifications">
                                 <i className="fas fa-bell text-xl"></i>
