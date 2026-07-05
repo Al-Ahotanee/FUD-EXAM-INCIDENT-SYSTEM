@@ -7,6 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- React & Babel -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -20,8 +23,15 @@
                 extend: {
                     colors: {
                         primary: '#1B3A6B',
+                        'primary-dark': '#0E2444',
+                        'primary-light': '#2A4E85',
                         accent: '#2E6DB4',
+                        'accent-light': '#4A8AD1',
                         dark: '#0f172a'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        display: ['Manrope', 'ui-sans-serif', 'system-ui', 'sans-serif']
                     },
                     animation: {
                         'fade-in': 'fadeIn 1s ease-out',
@@ -37,6 +47,9 @@
     </script>
     <style>
         html { scroll-behavior: smooth; }
+        h1,h2,h3,h4,h5,h6,.font-display { font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; }
+        ::selection { background: #2E6DB4; color: #fff; }
+        body { -webkit-font-smoothing: antialiased; }
         .glass-nav { background: rgba(27, 58, 107, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
     </style>
 </head>
@@ -339,7 +352,7 @@
             return (
                 <div className="min-h-screen flex items-center justify-center p-6 bg-gray-50 relative overflow-hidden animate-fade-in">
                     {/* Decorative Background for Login */}
-                    <div className="absolute top-0 left-0 w-full h-64 bg-primary rounded-b-[50%] scale-150 transform -translate-y-24"></div>
+                    <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-br from-primary to-primary-dark rounded-b-[50%] scale-150 transform -translate-y-24"></div>
 
                     <div className="w-full max-w-md relative z-10">
                         <div className="text-center mb-8">
@@ -372,7 +385,7 @@
                                         <input className="w-full pl-11 pr-4 py-3 bg-gray-50 rounded-lg border border-gray-200 focus:border-accent focus:bg-white focus:ring-2 focus:ring-accent/20 outline-none transition" type="password" placeholder="••••••••" onChange={e => setForm({...form, password: e.target.value})} required/>
                                     </div>
                                 </div>
-                                <button disabled={loading} className="w-full bg-primary text-white p-3.5 rounded-lg font-bold hover:bg-accent transition shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 mt-2 disabled:opacity-70">
+                                <button disabled={loading} className="w-full bg-primary text-white p-3.5 rounded-lg font-bold hover:bg-accent-light transition-all shadow-card hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2 mt-2 disabled:opacity-70 disabled:hover:translate-y-0">
                                     {loading ? <i className="fas fa-circle-notch fa-spin"></i> : <><i className="fas fa-sign-in-alt"></i> Authenticate</>}
                                 </button>
                             </div>
