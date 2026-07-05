@@ -7,6 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- React & Babel -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -15,12 +18,26 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     
     <script>
-        tailwind.config = { 
-            theme: { 
-                extend: { 
-                    colors: { primary: '#1B3A6B', accent: '#2E6DB4' } 
-                } 
-            } 
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1B3A6B',
+                        'primary-dark': '#0E2444',
+                        'primary-light': '#2A4E85',
+                        accent: '#2E6DB4',
+                        'accent-light': '#4A8AD1'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        display: ['Manrope', 'ui-sans-serif', 'system-ui', 'sans-serif']
+                    },
+                    boxShadow: {
+                        soft: '0 2px 10px -2px rgba(15,36,68,0.08), 0 1px 3px -1px rgba(15,36,68,0.06)',
+                        card: '0 8px 24px -8px rgba(15,36,68,0.14)'
+                    }
+                }
+            }
         }
     </script>
     <style>
@@ -41,6 +58,11 @@
         /* Custom Scrollbar for Timeline */
         .timeline-scroll::-webkit-scrollbar { width: 6px; }
         .timeline-scroll::-webkit-scrollbar-thumb { background-color: #CBD5E1; border-radius: 4px; }
+    </style>
+    <style>
+        h1,h2,h3,h4,h5,h6,.font-display { font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.01em; }
+        ::selection { background: #2E6DB4; color: #fff; }
+        body { -webkit-font-smoothing: antialiased; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-700 font-sans">
@@ -64,7 +86,7 @@
                 <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
                     <button onClick={onClose} className="px-4 py-2 text-sm font-bold text-gray-600 hover:text-gray-900">Close</button>
                     {onSubmit && (
-                        <button onClick={onSubmit} disabled={loading} className="px-6 py-2 bg-primary text-white text-sm font-bold rounded-md shadow hover:bg-accent transition disabled:opacity-50">
+                        <button onClick={onSubmit} disabled={loading} className="px-6 py-2 bg-primary text-white text-sm font-bold rounded-lg shadow-soft hover:shadow-card hover:bg-accent-light transition-all disabled:opacity-50 disabled:hover:translate-y-0 hover:-translate-y-0.5">
                             {loading ? <i className="fas fa-spinner fa-spin"></i> : submitText}
                         </button>
                     )}
@@ -118,12 +140,27 @@
 
         const DashboardView = () => {
             const [stats, setStats] = useState({ total_incidents: 0, open_cases: 0, under_review: 0, resolved_this_month: 0, pending_incidents: 0 });
-            useEffect(() => { apiCall('get_eo_dashboard').then(res => setStats(res.data.data)).catch(() => {}); }, []);
+            const [loading, setLoading] = useState(true);
+            useEffect(() => { setLoading(true); apiCall('get_eo_dashboard').then(res => setStats(res.data.data)).catch(() => {}).finally(() => setLoading(false)); }, []);
+
+            const StatCard = ({ icon, iconBg, iconColor, value, label }) => (
+                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-soft hover:shadow-card transition-shadow flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-full ${iconBg} ${iconColor} flex items-center justify-center text-xl shrink-0`}><i className={`fas ${icon}`}></i></div>
+                    {loading ? (
+                        <div className="flex-1 min-w-0">
+                            <div className="h-7 w-16 bg-gray-100 rounded animate-pulse mb-2"></div>
+                            <div className="h-3 w-24 bg-gray-100 rounded animate-pulse"></div>
+                        </div>
+                    ) : (
+                        <div><div className="text-3xl font-extrabold text-gray-900">{value || 0}</div><div className="text-xs text-gray-500 uppercase font-bold tracking-wide">{label}</div></div>
+                    )}
+                </div>
+            );
 
             return (
                 <div className="space-y-6">
-                    <h2 className="text-2xl font-bold text-gray-900">Registry Overview</h2>
-                    {stats.pending_incidents > 0 && (
+                    <h2 className="text-2xl font-display font-bold text-gray-900 tracking-tight">Registry Overview</h2>
+                    {!loading && stats.pending_incidents > 0 && (
                         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg shadow-sm flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <i className="fas fa-exclamation-triangle text-yellow-500 text-xl"></i>
@@ -136,10 +173,10 @@
                         </div>
                     )}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm"><div className="text-gray-500 text-xs font-bold uppercase mb-2">Total Incidents</div><div className="text-3xl font-extrabold text-primary">{stats.total_incidents}</div></div>
-                        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm"><div className="text-gray-500 text-xs font-bold uppercase mb-2">Active Cases</div><div className="text-3xl font-extrabold text-blue-600">{stats.open_cases}</div></div>
-                        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm"><div className="text-gray-500 text-xs font-bold uppercase mb-2">Under Review</div><div className="text-3xl font-extrabold text-yellow-600">{stats.under_review}</div></div>
-                        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm"><div className="text-gray-500 text-xs font-bold uppercase mb-2">Resolved (Month)</div><div className="text-3xl font-extrabold text-green-600">{stats.resolved_this_month}</div></div>
+                        <StatCard icon="fa-folder-open" iconBg="bg-blue-50" iconColor="text-primary" value={stats.total_incidents} label="Total Incidents" />
+                        <StatCard icon="fa-gavel" iconBg="bg-blue-50" iconColor="text-blue-600" value={stats.open_cases} label="Active Cases" />
+                        <StatCard icon="fa-hourglass-half" iconBg="bg-yellow-50" iconColor="text-yellow-600" value={stats.under_review} label="Under Review" />
+                        <StatCard icon="fa-check-circle" iconBg="bg-green-50" iconColor="text-green-600" value={stats.resolved_this_month} label="Resolved (Month)" />
                     </div>
                 </div>
             );
@@ -167,7 +204,7 @@
                     </div>
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         <table className="w-full text-left">
-                            <thead className="bg-gray-50 text-xs uppercase text-gray-500 border-b border-gray-200">
+                            <thead className="bg-slate-50/80 text-[11px] uppercase tracking-wider text-gray-500 border-b border-gray-200 sticky top-0">
                                 <tr><th className="p-4">Ref & Date</th><th className="p-4">Student Info</th><th className="p-4">Offence Details</th><th className="p-4 text-center">Status</th><th className="p-4 text-right">Actions</th></tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -234,7 +271,7 @@
 
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         <table className="w-full text-left">
-                            <thead className="bg-gray-50 text-xs uppercase text-gray-500 border-b border-gray-200">
+                            <thead className="bg-slate-50/80 text-[11px] uppercase tracking-wider text-gray-500 border-b border-gray-200 sticky top-0">
                                 <tr><th className="p-4">Case / Incident</th><th className="p-4">Student</th><th className="p-4">Current Stage</th><th className="p-4">Committee</th><th className="p-4 text-right">Actions</th></tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -257,7 +294,7 @@
                                             </button>
                                             
                                             {/* Workflow Buttons */}
-                                            {c.stage === 'reported' && <button onClick={() => {if(confirm('Begin review?')) apiCall('advance_case_stage', {case_id: c.id, stage: 'under_review'}).then(fetchCases);}} className="bg-primary hover:bg-blue-800 text-white px-3 py-1.5 rounded-md text-xs font-bold transition">Begin Review</button>}
+                                            {c.stage === 'reported' && <button onClick={() => {if(confirm('Begin review?')) apiCall('advance_case_stage', {case_id: c.id, stage: 'under_review'}).then(fetchCases);}} className="bg-primary hover:bg-primary-dark text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-soft hover:shadow-card">Begin Review</button>}
                                             {c.stage === 'under_review' && <button onClick={() => {setSelectedCase(c); setForm({}); setActiveModal('investigate');}} className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1.5 rounded-md text-xs font-bold transition">Send to Investigate</button>}
                                         </td>
                                     </tr>
@@ -411,7 +448,7 @@
                                 <h3 className="font-bold text-lg text-gray-800">Official Disciplinary Reports</h3>
                                 <p className="text-xs text-gray-500">Generate printable notice board lists for resolved cases based on specific criteria.</p>
                             </div>
-                            <button onClick={() => window.print()} className="bg-primary hover:bg-accent text-white px-4 py-2 rounded-md text-sm font-bold shadow transition flex items-center gap-2">
+                            <button onClick={() => window.print()} className="bg-primary hover:bg-accent-light text-white px-4 py-2 rounded-lg text-sm font-bold shadow-soft hover:shadow-card transition-all hover:-translate-y-0.5 flex items-center gap-2">
                                 <i className="fas fa-print"></i> Print Notice Board Copy
                             </button>
                         </div>
@@ -523,16 +560,26 @@
         };
 
         // --- Master Layout ---
-        if (!user) return null;
+        if (!user) {
+            return (
+                <div className="flex h-screen items-center justify-center bg-gray-50">
+                    <div className="flex flex-col items-center gap-3 text-primary">
+                        <i className="fas fa-circle-notch fa-spin text-3xl"></i>
+                        <div className="text-sm font-bold text-gray-500 uppercase tracking-wide">Loading Exam Officer Console…</div>
+                    </div>
+                </div>
+            );
+        }
 
         return (
             <div className="flex h-screen bg-gray-50 overflow-hidden">
-                <aside className="no-print w-64 bg-primary text-white flex flex-col h-full shadow-lg z-20 relative">
-                    <div className="h-16 flex items-center px-6 font-bold text-xl tracking-tight border-b border-white/10 bg-black/10">
-                        FUD<span className="text-blue-300 ml-1">OIRMF</span>
+                <aside className="no-print w-64 bg-gradient-to-b from-primary to-primary-dark text-white flex flex-col h-full shadow-card z-20 relative">
+                    <div className="h-16 flex items-center gap-3 px-6 font-display font-extrabold text-xl tracking-tight border-b border-white/10 bg-black/10">
+                        <div className="w-9 h-9 rounded-lg bg-accent/90 flex items-center justify-center shadow-soft shrink-0"><i className="fas fa-shield-halved text-sm"></i></div>
+                        <span>FUD<span className="text-accent-light ml-1">OIRMF</span></span>
                     </div>
                     <div className="p-4 flex items-center gap-3 border-b border-white/10">
-                        <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center font-bold text-lg"><i className="fas fa-id-badge"></i></div>
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-accent-light ring-2 ring-white/15 flex items-center justify-center font-bold text-lg shadow-soft shrink-0"><i className="fas fa-id-badge"></i></div>
                         <div>
                             <div className="text-sm font-bold truncate w-40">{user?.full_name}</div>
                             <div className="text-[10px] uppercase tracking-wider text-blue-200">Registry / Exam Officer</div>
@@ -540,18 +587,18 @@
                     </div>
                     <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                         <div className="text-xs font-bold text-blue-300/50 uppercase tracking-wider mb-2 mt-2 px-2">Registry Tools</div>
-                        <button onClick={()=>setView('dashboard')} className={`w-full text-left px-4 py-2.5 rounded-md flex items-center gap-3 transition text-sm ${view==='dashboard'?'bg-accent text-white font-bold':'text-blue-100 hover:bg-white/10'}`}><i className="fas fa-chart-line w-5"></i> Dashboard</button>
-                        <button onClick={()=>setView('incidents')} className={`w-full text-left px-4 py-2.5 rounded-md flex items-center gap-3 transition text-sm ${view==='incidents'?'bg-accent text-white font-bold':'text-blue-100 hover:bg-white/10'}`}><i className="fas fa-inbox w-5"></i> Incident Triage</button>
-                        <button onClick={()=>setView('cases')} className={`w-full text-left px-4 py-2.5 rounded-md flex items-center gap-3 transition text-sm ${view==='cases'?'bg-accent text-white font-bold':'text-blue-100 hover:bg-white/10'}`}><i className="fas fa-gavel w-5"></i> Manage Cases</button>
+                        <button onClick={()=>setView('dashboard')} className={`w-full text-left px-3.5 py-2.5 rounded-lg flex items-center gap-3 transition-all text-sm border-l-[3px] ${view==='dashboard'?'bg-white/10 text-white font-bold border-accent-light shadow-inner':'border-transparent text-blue-100/80 hover:bg-white/5 hover:text-white'}`}><i className="fas fa-chart-line w-5"></i> Dashboard</button>
+                        <button onClick={()=>setView('incidents')} className={`w-full text-left px-3.5 py-2.5 rounded-lg flex items-center gap-3 transition-all text-sm border-l-[3px] ${view==='incidents'?'bg-white/10 text-white font-bold border-accent-light shadow-inner':'border-transparent text-blue-100/80 hover:bg-white/5 hover:text-white'}`}><i className="fas fa-inbox w-5"></i> Incident Triage</button>
+                        <button onClick={()=>setView('cases')} className={`w-full text-left px-3.5 py-2.5 rounded-lg flex items-center gap-3 transition-all text-sm border-l-[3px] ${view==='cases'?'bg-white/10 text-white font-bold border-accent-light shadow-inner':'border-transparent text-blue-100/80 hover:bg-white/5 hover:text-white'}`}><i className="fas fa-gavel w-5"></i> Manage Cases</button>
                         
                         <div className="text-xs font-bold text-blue-300/50 uppercase tracking-wider mb-2 mt-6 px-2">Documentation</div>
-                        <button onClick={()=>setView('reports')} className={`w-full text-left px-4 py-2.5 rounded-md flex items-center gap-3 transition text-sm ${view==='reports'?'bg-accent text-white font-bold':'text-blue-100 hover:bg-white/10'}`}><i className="fas fa-print w-5"></i> Notice Board Reports</button>
+                        <button onClick={()=>setView('reports')} className={`w-full text-left px-3.5 py-2.5 rounded-lg flex items-center gap-3 transition-all text-sm border-l-[3px] ${view==='reports'?'bg-white/10 text-white font-bold border-accent-light shadow-inner':'border-transparent text-blue-100/80 hover:bg-white/5 hover:text-white'}`}><i className="fas fa-print w-5"></i> Notice Board Reports</button>
                     </nav>
                 </aside>
 
                 <div className="flex-1 flex flex-col min-w-0">
-                    <header className="no-print h-16 bg-white shadow-sm flex items-center justify-between px-8 z-10 border-b border-gray-200">
-                        <h1 className="text-xl font-extrabold text-gray-800 capitalize">
+                    <header className="no-print h-16 bg-white/95 backdrop-blur-sm shadow-soft flex items-center justify-between px-8 z-10 border-b border-gray-100">
+                        <h1 className="text-xl font-display font-extrabold text-gray-800 capitalize tracking-tight">
                             {view === 'dashboard' ? 'Overview' : view === 'incidents' ? 'Incident Triage' : view === 'cases' ? 'Case Management' : 'Disciplinary Reports'}
                         </h1>
                         <div className="flex items-center gap-6">
